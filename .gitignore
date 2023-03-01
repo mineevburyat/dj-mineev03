@@ -1,5 +1,6 @@
 /env
 env/
-__pycache__/
-*.py[cod]
+**/__pycache__
+*.pyo
+*.pyc
 
