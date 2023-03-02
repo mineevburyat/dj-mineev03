@@ -1,84 +1,148 @@
 from django.db import models
 
-# Create your models here.
-class ResourceStudy(models.Model):
-    '''ресурсы для самостоятельного ознакомления с темой (статья, глава книги, 
-    таймсет видео и пр.). Ссылка на отличную статью, видео, главу книги более 
-    глубоко раскрывающая тему. TODO: продумать систему оценки качества и 
-    актуальности статьи'''
+class RoadMapStudy(models.Model):
+    '''Дорожная карта обучения: план занятий, в котором наглядно отображается стратегический план проекта: его главные цели и задачи, сроки исполнения, основные темы.'''
     class Meta:
-        verbose_name = "ссылка на ресурс по теме"
-        verbose_name_plural = 'ссылки на ресурсы'
-    name = models.CharField(max_length=30, verbose_name="Название ресурса")
-    url = models.URLField(verbose_name="Ссылка на ресурс")
-    
+        verbose_name = "план изучения (roadmap)"
+        verbose_name_plural = 'планы изучения (roadmaps)'
+    name = models.CharField(
+        max_length=35, 
+        verbose_name="Название",
+        help_text="на русском")
+    name_en = models.CharField(
+        max_length=20, 
+        verbose_name='Roadmap',
+        help_text="на английском")
+    description = models.TextField(
+        verbose_name="Краткое описание:",
+        help_text = "цели и задачи, сроки, основные темы")
+        
     def __str__(self) -> str:
-        return f"{self.name}"
-    
-class ResourceLern(models.Model):
-    '''ресурсы для совместного обучания в составе группы, полноценный курс, книга,
-    видеоканал. TODO: отлично будет если у курса есть API отражающий уровень 
-    прохождения курса. И отображение этого уровня непосредственно в роадмап для зарегистрированного
-    пользователя'''
-    class Meta:
-        verbose_name = "ссылка на курс"
-        verbose_name_plural = 'ссылки на курсы'
-    name = models.CharField(max_length=30, verbose_name="Название курса")
-    url = models.URLField(verbose_name="Ссылка на курс")
-    
-    def __str__(self) -> str:
-        return f"{self.name}"
-    
+        return f"{self.name} ({self.name_en})"
+
 class Topik(models.Model):
-    '''Тема обсуждения, изучения. основная тема из плана изучения. 
-    Отражающая текущий уровень усвоения. Связана с курсами и ресурсами, 
-    а так же ключевыми словами'''
+    '''Отдельный курс: объемная тема обсуждения, изучения. основная тема из плана изучения. 
+    Отражающая текущий уровень усвоения. Связана с подтемами, которые связаны с ресурсами, а так же ключевыми словами'''
     class Meta:
-        verbose_name = "тема обсуждения и изучения"
-        verbose_name_plural = 'темы обсуждения и изучения'
-    name = models.CharField(max_length=35, verbose_name="Краткое название темы")
-    name_en = models.CharField(max_length=20, verbose_name='краткое название на английском')
-    description = models.TextField(verbose_name="тезисное описание или определение темы")
-    current_level = models.SmallIntegerField(verbose_name='Текущий уровень знаний', default=0)
+        verbose_name = "курс для изучения"
+        verbose_name_plural = 'курсы для изучения'
+    name = models.CharField(
+        max_length=35, 
+        verbose_name="название курса")
+    name_en = models.CharField(
+        max_length=20, 
+        verbose_name='topik',
+        help_text="название на английском")
+    description = models.TextField(
+        verbose_name="краткое описание",
+        help_text="тезисное описание или цели курса")
+    study_level = models.FloatField(
+        verbose_name='уровень обучения',
+        help_text="уровень обучения (для сортировки)",
+        default=1
+        # unique=True
+        )
     roadmap = models.ForeignKey(
-        'RoadMapStudy', 
+        RoadMapStudy, 
         verbose_name='план изучения (roadmap)',
-        on_delete=models.CASCADE,
         blank=True,
-        null=True)
+        null=True,
+        on_delete=models.SET_NULL)
     
     def __str__(self) -> str:
         return f"{self.name} ({self.name_en})"
+    
+class Subject(models.Model):
+    '''Выделенная тема для изучения'''
+    class Meta:
+        verbose_name = "Тема для изучения"
+        verbose_name_plural = 'Темы для изучения'
+    name = models.CharField(
+        max_length=30, 
+        verbose_name="название темы"
+        )
+    name_en = models.CharField(
+        max_length=20, 
+        verbose_name='subject',
+        help_text="название на английском")
+    current_level = models.SmallIntegerField(
+        verbose_name='текущий уровень знаний', 
+        default=0)
+    description = models.TextField(
+        verbose_name="цели и задачи темы",
+        help_text="описать основные цели и задачи изучаемой темы")
+    resource = models.ForeignKey(
+        'ResourceStudy',
+        verbose_name='ссылка на ресурс',
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True
+    )
+    keywords = models.ManyToManyField(
+        'KeyWord',
+        verbose_name="ключевые слова",
+        blank=True,
+        null=True
+    )
+    topik = models.ForeignKey(
+        Topik,
+        verbose_name='курс обучения',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
+    ) 
+       
+    def __str__(self) -> str:
+        return f"{self.name} ({self.topik})"
+    
+#----------------------------------------------
+
+class ResourceStudy(models.Model):
+    '''ресурсы для самостоятельного ознакомления с темой. Ссылка на отличную статью, видео, главу книги более 
+    глубоко раскрывающая тему. 
+    TODO: продумать систему оценки качества и 
+    актуальности статьи
+    TODO: отлично будет если у курса есть API отражающий уровень 
+    прохождения курса. И отображение этого уровня непосредственно в роадмап для зарегистрированного
+    пользователя'''
+    class Meta:
+        verbose_name = "ссылка на ресурс по теме"
+        verbose_name_plural = 'ссылки на ресурсы'
+    name = models.CharField(
+        max_length=30, 
+        verbose_name="Название ресурса"
+        )
+    url = models.URLField(verbose_name="Ссылка на ресурс")
+        
+    def __str__(self) -> str:
+        return f"{self.name}"
+    
     
 class KeyWord(models.Model):
     '''Ключевые слова для данной темы или ресурса'''
     class Meta:
         verbose_name = "ключевое слово"
         verbose_name_plural = 'ключевые слова'
-    word = models.CharField(max_length=35, verbose_name="слово")
-    word_en = models.CharField(max_length=20, verbose_name='слово на английском')
+    word = models.CharField(
+        max_length=35, 
+        verbose_name="слово, словосочетание")
+    word_en = models.CharField(
+        max_length=20, 
+        verbose_name='слово на английском')
     definition = models.TextField(verbose_name="строгое определение")
+    
     
     def __str__(self) -> str:
         return f"{self.word} ({self.word_en})"
     
-class RoadMapStudy(models.Model):
-    '''Дорожная карта, план, документ, в котором наглядно отображается стратегический план проекта: его главные цели и задачи, сроки исполнения, основные темы.'''
-    class Meta:
-        verbose_name = "план изучения"
-        verbose_name_plural = 'планы изучения'
-    name = models.CharField(max_length=35, verbose_name="Название дорожной карты")
-    name_en = models.CharField(max_length=20, verbose_name='Название плана изучения на английском')
-    description = models.TextField(verbose_name="Краткое описание: цели и задачи, сроки, основные темы")
-    
-    
-    def __str__(self) -> str:
-        return f"{self.name} ({self.name_en})"
+
     
 class FaQ(models.Model):
     '''Часто задаваемые вопросы по плану занятий, теме, ключевому слову'''
     class Meta:
         verbose_name = "часто задаваемый вопрос"
         verbose_name_plural = 'часто задаваемые вопросы'
-    question = models.CharField(max_length=35, verbose_name="кратко сформированный вопрос")
+    question = models.CharField(
+        max_length=35, 
+        verbose_name="кратко сформированный вопрос")
     answer = models.TextField(verbose_name="Развернутый ответ на вопрос")
