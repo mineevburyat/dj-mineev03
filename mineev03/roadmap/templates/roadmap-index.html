@@ -1,0 +1,42 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mineev03 - roadmaps</title>
+    <link rel="stylesheet" href={% static "css/roadmap.css"%}>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h2 class="name-page">Мои цели и задачи</h2>
+        <p> Всего целей и задач на сегодня: {{num}}
+        <div class="cards">
+            {% for roadmap in roadmaps%}
+            <div class="card">
+                <h3 class="card__head">{{roadmap.name}}</h3>
+                <h5 class="card__head_en">({{roadmap.name_en}})</h5>
+                {% comment %} <p class="card__body">{{roadmap.description}}</p> {% endcomment %}
+                <p>Общий уровень: {{roadmap.get_level}}</p>
+                <div class="card__footer">
+                    <ul class="card__params">
+                        <li>Курсов: {{roadmap.get_courses}}</li>
+                        <li>Тем: {{roadmap.get_subjects}}</li>
+                        <li>Keywords: {{roadmap.get_keywords}}</li>
+                    </ul>
+                </div>
+            </div>
+            {% empty %}
+            <p> К сожелению, я еще не поставил себе ни одной 
+                цели и задачи на своем пути. Но у меня все впереди!
+            </p>
+            {% endfor %}
+            
+        </div>
+    </div>
+</body>
+</html>

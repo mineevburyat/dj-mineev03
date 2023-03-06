@@ -1,8 +1,14 @@
 from django.shortcuts import render
-
-# Create your views here.
+from .models import RoadMapStudy
 from django.http import HttpResponse
 
 
 def index(request):
-    return HttpResponse("Hello, world. You're at the roadmap index.")
+    roadmaps = RoadMapStudy.objects.all()
+    num = roadmaps.count()
+    return render(request,
+                  'roadmap-index.html',
+                  context = {
+                      'roadmaps': roadmaps, 
+                      'num': num})
+    # return HttpResponse(f"Hello, world. You're at the roadmap index.{request}")

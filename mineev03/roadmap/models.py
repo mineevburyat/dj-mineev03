@@ -6,7 +6,7 @@ class RoadMapStudy(models.Model):
         verbose_name = "план изучения (roadmap)"
         verbose_name_plural = 'планы изучения (roadmaps)'
     name = models.CharField(
-        max_length=35, 
+        max_length=45, 
         verbose_name="Название",
         help_text="на русском")
     name_en = models.CharField(
@@ -19,6 +19,27 @@ class RoadMapStudy(models.Model):
         
     def __str__(self) -> str:
         return f"{self.name} ({self.name_en})"
+    
+    def get_courses(self):
+        return Topik.objects.filter(roadmap=self).count()
+    
+    def get_subjects(self):
+        count = 0
+        for topik in Topik.objects.filter(roadmap=self):
+            count += topik.get_subjects()
+        return count
+    
+    def get_level(self):
+        level = 0
+        for topik in Topik.objects.filter(roadmap=self):
+            level += topik.get_level()
+        return level
+    
+    def get_keywords(self):
+        count_keywords = 0
+        for topik in Topik.objects.filter(roadmap=self):
+            count_keywords += topik.get_keywords()
+        return count_keywords
 
 class Topik(models.Model):
     '''Отдельный курс: объемная тема обсуждения, изучения. основная тема из плана изучения. 
@@ -51,6 +72,21 @@ class Topik(models.Model):
     
     def __str__(self) -> str:
         return f"{self.name} ({self.name_en})"
+    
+    def get_level(self):
+        level = 0
+        for subject in Subject.objects.filter(topik=self):
+            level += subject.current_level
+        return level
+    
+    def get_subjects(self):
+        return Subject.objects.filter(topik=self).count()
+    
+    def get_keywords(self):
+        count_keywords = 0
+        for subject in Subject.objects.filter(topik=self):
+            count_keywords += subject.get_keywords()
+        return count_keywords
     
 class Subject(models.Model):
     '''Выделенная тема для изучения'''
@@ -94,6 +130,9 @@ class Subject(models.Model):
        
     def __str__(self) -> str:
         return f"{self.name} ({self.topik})"
+    
+    def get_keywords(self):
+        return self.keywords.all().count()
     
 #----------------------------------------------
 
